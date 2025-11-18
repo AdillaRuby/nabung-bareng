@@ -1,47 +1,29 @@
-// Data penyimpanan menggunakan Firebase Firestore
+// Data penyimpanan menggunakan localStorage
 let savingsData = [];
-let unsubscribe = null;
 
-// Fungsi untuk menyimpan data ke Firestore
-async function saveData(entry) {
+// Fungsi untuk menyimpan data ke localStorage
+function saveData() {
     try {
-        await db.collection('savings').add({
-            ...entry,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        localStorage.setItem('savingsData', JSON.stringify(savingsData));
     } catch (error) {
         console.error('Error saving data:', error);
-        showNotification('Gagal menyimpan data. Periksa koneksi internet.', 'error');
+        showNotification('Gagal menyimpan data ke penyimpanan lokal.', 'error');
     }
 }
 
-// Fungsi untuk memuat data dari Firestore
+// Fungsi untuk memuat data dari localStorage
 function loadData() {
-    if (unsubscribe) {
-        unsubscribe();
+    try {
+        const stored = localStorage.getItem('savingsData');
+        if (stored) {
+            savingsData = JSON.parse(stored);
+        }
+        updateTotals();
+        updateHistory();
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showNotification('Gagal memuat data dari penyimpanan lokal.', 'error');
     }
-
-    unsubscribe = db.collection('savings')
-        .orderBy('timestamp', 'desc')
-        .onSnapshot((querySnapshot) => {
-            savingsData = [];
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                savingsData.push({
-                    id: doc.id,
-                    person: data.person,
-                    amount: data.amount,
-                    date: data.date,
-                    type: data.type || 'tambah'
-                });
-            });
-
-            updateTotals();
-            updateHistory();
-        }, (error) => {
-            console.error('Error loading data:', error);
-            showNotification('Gagal memuat data. Periksa koneksi internet.', 'error');
-        });
 }
 
 // Fungsi untuk menampilkan total nabung
@@ -71,45 +53,97 @@ function formatNumber(input) {
 
 // Fungsi untuk menampilkan riwayat nabung
 function updateHistory() {
-    const historyList = document.getElementById('historyList');
-    const noHistory = document.getElementById('noHistory');
+    const savingsHistoryList = document.getElementById('savingsHistoryList');
+    const noSavingsHistory = document.getElementById('noSavingsHistory');
+    const withdrawalHistoryList = document.getElementById('withdrawalHistoryList');
+    const noWithdrawalHistory = document.getElementById('noWithdrawalHistory');
 
-    historyList.innerHTML = '';
+    savingsHistoryList.innerHTML = '';
+    withdrawalHistoryList.innerHTML = '';
 
-    if (savingsData.length === 0) {
-        noHistory.style.display = 'block';
-        return;
+    // Filter data berdasarkan tipe
+    const savingsDataFiltered = savingsData.filter(entry => entry.type === 'tambah' || entry.type === 'bayar');
+    const withdrawalDataFiltered = savingsData.filter(entry => entry.type === 'tarik');
+
+    // Riwayat Nabung
+    if (savingsDataFiltered.length === 0) {
+        noSavingsHistory.style.display = 'block';
+    } else {
+        noSavingsHistory.style.display = 'none';
+
+        // Urutkan data berdasarkan tanggal terbaru
+        const sortedSavingsData = [...savingsDataFiltered].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        sortedSavingsData.forEach((entry, index) => {
+            const li = document.createElement('li');
+            const formattedDate = new Date(entry.date).toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            li.innerHTML = `
+                <div class="history-item">
+                    <div class="history-icon">
+                        <i class="fas fa-${entry.person === 'kasya' ? 'user' : 'user'}"></i>
+                    </div>
+                    <div class="history-content">
+                        <div class="history-person">${entry.person === 'kasya' ? 'Kasya' : 'Casa'}</div>
+                        <div class="history-amount">Rp ${entry.amount.toLocaleString('id-ID')}</div>
+                        <div class="history-date">${formattedDate}</div>
+                        <div class="history-type">${entry.type === 'tambah' ? 'Menambah Nabung' : 'Pembayaran Nabung'}</div>
+                    </div>
+                    <div class="history-actions">
+                        <button class="delete-btn" data-index="${savingsData.indexOf(entry)}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            savingsHistoryList.appendChild(li);
+        });
     }
 
-    noHistory.style.display = 'none';
+    // Riwayat Penarikan
+    if (withdrawalDataFiltered.length === 0) {
+        noWithdrawalHistory.style.display = 'block';
+    } else {
+        noWithdrawalHistory.style.display = 'none';
 
-    // Urutkan data berdasarkan tanggal terbaru
-    const sortedData = [...savingsData].sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Urutkan data berdasarkan tanggal terbaru
+        const sortedWithdrawalData = [...withdrawalDataFiltered].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    sortedData.forEach(entry => {
-        const li = document.createElement('li');
-        const formattedDate = new Date(entry.date).toLocaleDateString('id-ID', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+        sortedWithdrawalData.forEach((entry, index) => {
+            const li = document.createElement('li');
+            const formattedDate = new Date(entry.date).toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            li.innerHTML = `
+                <div class="history-item">
+                    <div class="history-icon">
+                        <i class="fas fa-${entry.person === 'kasya' ? 'user' : 'user'}"></i>
+                    </div>
+                    <div class="history-content">
+                        <div class="history-person">${entry.person === 'kasya' ? 'Kasya' : 'Casa'}</div>
+                        <div class="history-amount withdrawal">Rp ${Math.abs(entry.amount).toLocaleString('id-ID')}</div>
+                        <div class="history-date">${formattedDate}</div>
+                        <div class="history-type">Penarikan Nabung</div>
+                    </div>
+                    <div class="history-actions">
+                        <button class="delete-btn" data-index="${savingsData.indexOf(entry)}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            withdrawalHistoryList.appendChild(li);
         });
-
-        li.innerHTML = `
-            <div class="history-item">
-                <div class="history-icon">
-                    <i class="fas fa-${entry.person === 'kasya' ? 'user' : 'user'}"></i>
-                </div>
-                <div class="history-content">
-                    <div class="history-person">${entry.person === 'kasya' ? 'Kasya' : 'Casa'}</div>
-                    <div class="history-amount">Rp ${entry.amount.toLocaleString('id-ID')}</div>
-                    <div class="history-date">${formattedDate}</div>
-                    <div class="history-type">${entry.type === 'tambah' ? 'Menambah Nabung' : 'Pembayaran Nabung'}</div>
-                </div>
-            </div>
-        `;
-        historyList.appendChild(li);
-    });
+    }
 }
 
 // Fungsi untuk animasi angka
@@ -224,6 +258,42 @@ document.getElementById('savingsForm').addEventListener('submit', function(e) {
         return;
     }
 
+    if (action === 'tarik') {
+        // Penarikan nabung - kurangi dari total
+        const currentTotal = person === 'kasya' ? parseInt(document.getElementById('totalKasya').textContent.replace(/\D/g, '')) : parseInt(document.getElementById('totalCasa').textContent.replace(/\D/g, ''));
+
+        if (amount > currentTotal) {
+            showNotification(`Saldo tidak cukup! Saldo ${person === 'kasya' ? 'Kasya' : 'Casa'} saat ini: Rp ${currentTotal.toLocaleString('id-ID')}`, 'error');
+            return;
+        }
+
+        savingsData.push({ person, amount: -amount, date, type: 'tarik' });
+
+        // Simpan data
+        saveData();
+
+        // Update tampilan
+        updateTotals();
+        updateHistory();
+
+        // Reset form
+        this.reset();
+
+        // Tampilkan notifikasi
+        showNotification(`Berhasil menarik nabung Rp ${amount.toLocaleString('id-ID')} untuk ${person === 'kasya' ? 'Kasya' : 'Casa'}!`);
+
+        // Animasi sukses
+        const button = this.querySelector('button');
+        button.innerHTML = '<i class="fas fa-check"></i> Berhasil!';
+        button.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+
+        setTimeout(() => {
+            button.innerHTML = '<i class="fas fa-save"></i> Proses';
+            button.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        }, 2000);
+        return;
+    }
+
     if (action === 'bayar') {
         // Buka modal QRIS untuk pembayaran
         openPaymentModal(person, amount);
@@ -260,10 +330,30 @@ document.getElementById('savingsForm').addEventListener('submit', function(e) {
 // Set tanggal default ke hari ini
 document.getElementById('date').valueAsDate = new Date();
 
+// Fungsi untuk menghapus entry nabung
+function deleteEntry(index) {
+    const entryToDelete = savingsData[index];
+    const typeText = entryToDelete.type === 'tarik' ? 'penarikan' : 'nabung';
+
+    if (confirm(`Apakah Anda yakin ingin menghapus riwayat ${typeText} ini?`)) {
+        savingsData.splice(index, 1);
+        saveData();
+        updateTotals();
+        updateHistory();
+        showNotification(`Riwayat ${typeText} berhasil dihapus.`, 'success');
+    }
+}
+
+// Event listener untuk tombol delete
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) {
+        const button = e.target.closest('.delete-btn');
+        const index = parseInt(button.getAttribute('data-index'));
+        deleteEntry(index);
+    }
+});
+
 // Inisialisasi saat halaman dimuat
 document.addEventListener('DOMContentLoaded', function() {
-    // Tunggu Firebase siap
-    setTimeout(() => {
-        loadData();
-    }, 1000);
+    loadData();
 });

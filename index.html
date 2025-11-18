@@ -7,17 +7,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script>
+
 </head>
 <body>
     <div class="background">
         <div class="container">
             <header>
-                <h1><i class="fas fa-piggy-bank"></i> Nabung Bareng</h1>
-                <p>Selamat datang, Kasya! Mari nabung bersama Casa setiap hari untuk masa depan yang lebih cerah.</p>
+                <h1><i class="fas fa-coins"></i> Nabung Bareng</h1>
+                <p>Selamat datang Di Web Nabung Bersama.</p>
             </header>
 
             <div class="dashboard">
@@ -55,7 +52,7 @@
 
                         <div class="form-group">
                             <label for="amount"><i class="fas fa-money-bill-wave"></i> Jumlah Nabung (Rp)</label>
-                            <input type="text" id="amount" placeholder="10.000" required>
+                            <input type="text" id="amount" placeholder="10.000">
                         </div>
 
                         <div class="form-group">
@@ -72,6 +69,11 @@
                                     Tambah Nabung
                                 </label>
                                 <label class="radio-label">
+                                    <input type="radio" name="action" value="tarik">
+                                    <span class="radio-custom"></span>
+                                    Penarikan Nabung
+                                </label>
+                                <label class="radio-label">
                                     <input type="radio" name="action" value="bayar">
                                     <span class="radio-custom"></span>
                                     Bayar Nabung
@@ -86,12 +88,23 @@
                 </div>
 
                 <div class="card history-card">
-                    <h2><i class="fas fa-history"></i> Riwayat Nabung</h2>
+                    <h2><i class="fas fa-plus-circle"></i> Riwayat Nabung</h2>
                     <div class="history-container">
-                        <ul id="historyList"></ul>
-                        <div id="noHistory" class="no-history">
+                        <ul id="savingsHistoryList"></ul>
+                        <div id="noSavingsHistory" class="no-history">
                             <i class="fas fa-inbox"></i>
                             <p>Belum ada riwayat nabung</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card history-card">
+                    <h2><i class="fas fa-minus-circle"></i> Riwayat Penarikan</h2>
+                    <div class="history-container">
+                        <ul id="withdrawalHistoryList"></ul>
+                        <div id="noWithdrawalHistory" class="no-history">
+                            <i class="fas fa-inbox"></i>
+                            <p>Belum ada riwayat penarikan</p>
                         </div>
                     </div>
                 </div>
