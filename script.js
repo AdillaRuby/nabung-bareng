@@ -1,28 +1,56 @@
-// Data penyimpanan menggunakan localStorage
+// Data penyimpanan menggunakan Firebase Firestore
 let savingsData = [];
 
-// Fungsi untuk menyimpan data ke localStorage
-function saveData() {
+// Fungsi untuk menyimpan data ke Firestore
+async function saveData() {
     try {
+        // Simpan ke localStorage sebagai backup
         localStorage.setItem('savingsData', JSON.stringify(savingsData));
+
+        // Simpan ke Firestore
+        await db.collection('savings').doc('userData').set({
+            data: savingsData,
+            lastUpdated: new Date()
+        });
     } catch (error) {
         console.error('Error saving data:', error);
-        showNotification('Gagal menyimpan data ke penyimpanan lokal.', 'error');
+        showNotification('Gagal menyimpan data. Data disimpan secara lokal.', 'error');
     }
 }
 
-// Fungsi untuk memuat data dari localStorage
-function loadData() {
+// Fungsi untuk memuat data dari Firestore atau localStorage
+async function loadData() {
     try {
-        const stored = localStorage.getItem('savingsData');
-        if (stored) {
-            savingsData = JSON.parse(stored);
+        // Coba muat dari Firestore terlebih dahulu
+        const doc = await db.collection('savings').doc('userData').get();
+        if (doc.exists) {
+            savingsData = doc.data().data || [];
+        } else {
+            // Jika tidak ada di Firestore, coba localStorage
+            const stored = localStorage.getItem('savingsData');
+            if (stored) {
+                savingsData = JSON.parse(stored);
+                // Simpan ke Firestore untuk sinkronisasi
+                await saveData();
+            }
         }
         updateTotals();
         updateHistory();
     } catch (error) {
-        console.error('Error loading data:', error);
-        showNotification('Gagal memuat data dari penyimpanan lokal.', 'error');
+        console.error('Error loading data from Firestore:', error);
+        // Fallback ke localStorage
+        try {
+            const stored = localStorage.getItem('savingsData');
+            if (stored) {
+                savingsData = JSON.parse(stored);
+            }
+            updateTotals();
+            updateHistory();
+            showNotification('Data dimuat dari penyimpanan lokal.', 'error');
+        } catch (localError) {
+            console.error('Error loading local data:', localError);
+            showNotification('Gagal memuat data.', 'error');
+        }
     }
 }
 
