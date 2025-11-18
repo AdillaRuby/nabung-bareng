@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nabung Bareng - Kasya & Casa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body>
+    <div class="background">
+        <div class="container">
+            <header>
+                <h1><i class="fas fa-piggy-bank"></i> Nabung Bareng</h1>
+                <p>Selamat datang, Kasya! Mari nabung bersama Casa setiap hari untuk masa depan yang lebih cerah.</p>
+            </header>
+
+            <div class="dashboard">
+                <div class="card totals-card">
+                    <h2><i class="fas fa-chart-line"></i> Total Nabung</h2>
+                    <div class="totals-grid">
+                        <div class="total-item kasya">
+                            <i class="fas fa-user"></i>
+                            <span>Kasya</span>
+                            <strong>Rp <span id="totalKasya">0</span></strong>
+                        </div>
+                        <div class="total-item casa">
+                            <i class="fas fa-user"></i>
+                            <span>Casa</span>
+                            <strong>Rp <span id="totalCasa">0</span></strong>
+                        </div>
+                        <div class="total-item bersama">
+                            <i class="fas fa-heart"></i>
+                            <span>Bersama</span>
+                            <strong>Rp <span id="totalBersama">0</span></strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card form-card">
+                    <h2><i class="fas fa-plus-circle"></i> Tambah Nabung Hari Ini</h2>
+                    <form id="savingsForm">
+                        <div class="form-group">
+                            <label for="person"><i class="fas fa-users"></i> Pilih Orang</label>
+                            <select id="person" required>
+                                <option value="kasya">Kasya</option>
+                                <option value="casa">Casa</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="amount"><i class="fas fa-money-bill-wave"></i> Jumlah Nabung (Rp)</label>
+                            <input type="text" id="amount" placeholder="10.000" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="date"><i class="fas fa-calendar-alt"></i> Tanggal</label>
+                            <input type="date" id="date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-list"></i> Jenis Aksi</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="action" value="tambah" checked>
+                                    <span class="radio-custom"></span>
+                                    Tambah Nabung
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="action" value="bayar">
+                                    <span class="radio-custom"></span>
+                                    Bayar Nabung
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Proses
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card history-card">
+                    <h2><i class="fas fa-history"></i> Riwayat Nabung</h2>
+                    <div class="history-container">
+                        <ul id="historyList"></ul>
+                        <div id="noHistory" class="no-history">
+                            <i class="fas fa-inbox"></i>
+                            <p>Belum ada riwayat nabung</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal QRIS Payment -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-qrcode"></i> Pembayaran QRIS</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="payment-info">
+                    <p><strong>Jumlah yang harus dibayar:</strong></p>
+                    <p class="payment-amount" id="paymentAmount">Rp 0</p>
+                    <p><strong>Untuk:</strong> <span id="paymentPerson"></span></p>
+                </div>
+                <div class="qris-section">
+                    <h4>Scan QR Code untuk membayar:</h4>
+                    <div class="qris-placeholder">
+                        <img src="QRIS ZURRAA.jpg" alt="QRIS Code" class="qris-image">
+                        <p>QRIS Code</p>
+                        <small>Scan untuk membayar</small>
+                    </div>
+                </div>
+                <div class="payment-actions">
+                    <button class="btn-secondary" id="confirmPayment">
+                        <i class="fas fa-check"></i> Konfirmasi Pembayaran
+                    </button>
+                    <button class="btn-cancel" id="cancelPayment">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
