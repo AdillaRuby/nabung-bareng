@@ -624,6 +624,44 @@ header p {
     box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
 }
 
+/* Data Management Styles */
+.data-management-card {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.data-management {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+}
+
+.data-management .btn-secondary {
+    flex: 1;
+    max-width: 200px;
+}
+
+.import-label {
+    cursor: pointer;
+    padding: 12px 25px;
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    color: white;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+}
+
+.import-label:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+}
+
 @media (max-width: 768px) {
     .dashboard {
         padding: 20px;

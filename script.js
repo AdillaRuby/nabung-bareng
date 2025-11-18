@@ -1,56 +1,29 @@
-// Data penyimpanan menggunakan Firebase Firestore
+// Data penyimpanan menggunakan localStorage
 let savingsData = [];
 
-// Fungsi untuk menyimpan data ke Firestore
-async function saveData() {
+// Fungsi untuk menyimpan data ke localStorage
+function saveData() {
     try {
-        // Simpan ke localStorage sebagai backup
         localStorage.setItem('savingsData', JSON.stringify(savingsData));
-
-        // Simpan ke Firestore
-        await db.collection('savings').doc('userData').set({
-            data: savingsData,
-            lastUpdated: new Date()
-        });
+        console.log('Data saved to localStorage');
     } catch (error) {
         console.error('Error saving data:', error);
-        showNotification('Gagal menyimpan data. Data disimpan secara lokal.', 'error');
+        showNotification('Gagal menyimpan data.', 'error');
     }
 }
 
-// Fungsi untuk memuat data dari Firestore atau localStorage
-async function loadData() {
+// Fungsi untuk memuat data dari localStorage
+function loadData() {
     try {
-        // Coba muat dari Firestore terlebih dahulu
-        const doc = await db.collection('savings').doc('userData').get();
-        if (doc.exists) {
-            savingsData = doc.data().data || [];
-        } else {
-            // Jika tidak ada di Firestore, coba localStorage
-            const stored = localStorage.getItem('savingsData');
-            if (stored) {
-                savingsData = JSON.parse(stored);
-                // Simpan ke Firestore untuk sinkronisasi
-                await saveData();
-            }
+        const stored = localStorage.getItem('savingsData');
+        if (stored) {
+            savingsData = JSON.parse(stored);
         }
         updateTotals();
         updateHistory();
     } catch (error) {
-        console.error('Error loading data from Firestore:', error);
-        // Fallback ke localStorage
-        try {
-            const stored = localStorage.getItem('savingsData');
-            if (stored) {
-                savingsData = JSON.parse(stored);
-            }
-            updateTotals();
-            updateHistory();
-            showNotification('Data dimuat dari penyimpanan lokal.', 'error');
-        } catch (localError) {
-            console.error('Error loading local data:', localError);
-            showNotification('Gagal memuat data.', 'error');
-        }
+        console.error('Error loading data:', error);
+        showNotification('Gagal memuat data.', 'error');
     }
 }
 
@@ -380,6 +353,59 @@ document.addEventListener('click', function(e) {
         deleteEntry(index);
     }
 });
+
+// Fungsi untuk export data ke file JSON
+function exportData() {
+    const dataStr = JSON.stringify(savingsData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'nabung-bareng-data.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showNotification('Data berhasil diekspor!', 'success');
+}
+
+// Fungsi untuk import data dari file JSON
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            if (Array.isArray(importedData)) {
+                savingsData = importedData;
+                saveData();
+                updateTotals();
+                updateHistory();
+                showNotification('Data berhasil diimpor!', 'success');
+            } else {
+                showNotification('Format file tidak valid.', 'error');
+            }
+        } catch (error) {
+            console.error('Error importing data:', error);
+            showNotification('Gagal mengimpor data.', 'error');
+        }
+    };
+    reader.readAsText(file);
+}
+
+// Auto-save setiap 30 detik
+setInterval(saveData, 30000);
+
+// Save data sebelum halaman ditutup
+window.addEventListener('beforeunload', saveData);
+
+// Event listener untuk tombol export
+document.getElementById('exportBtn').addEventListener('click', exportData);
+
+// Event listener untuk input import
+document.getElementById('importInput').addEventListener('change', importData);
 
 // Inisialisasi saat halaman dimuat
 document.addEventListener('DOMContentLoaded', function() {
